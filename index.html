@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ปฏิทินค่าแรง รปภ. บ.PCS</title>
+    <title>ปฏิทินค่าแรง รปภ. บ.PCS (แก้ถูกต้อง วันที่ 24 ช่องแรกเสมอ)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -19,8 +19,6 @@
             margin: 0;
             padding: 20px;
         }
-
-        /* การ์ดหลักใช้ flex row ให้ปุ่มอยู่ซ้ายขวาตาราง */
         .calendar-card {
             background: white;
             border-radius: 32px;
@@ -35,12 +33,10 @@
             max-width: 1200px;
             margin: 0 auto;
         }
-
         .calendar-content {
             flex: 1;
             min-width: 0;
         }
-
         .nav-arrow {
             background: white;
             border: none;
@@ -67,7 +63,6 @@
         .nav-arrow:active {
             transform: scale(0.96);
         }
-
         .company-title {
             font-size: 1.8rem;
             font-weight: 800;
@@ -229,7 +224,6 @@
             font-size: 0.65rem;
             margin-top: 4px;
         }
-
         @media (max-width: 680px) {
             .calendar-card { gap: 6px; padding: 1rem 0.5rem; }
             .nav-arrow { width: 48px; height: 48px; font-size: 2rem; }
@@ -242,9 +236,6 @@
         @media (max-width: 550px) {
             .calendar-table th { font-size: 0.7rem; padding: 6px 2px; }
             .calendar-table td { font-size: 0.9rem; }
-        }
-        td.today-cell {
-            background-color: inherit !important;
         }
         .calendar-table td:active {
             transform: scale(0.98);
@@ -276,7 +267,7 @@
 </div>
 
 <script>
-    // ---------------------- วันสำคัญ (ค.ศ.) ----------------------
+    // ข้อมูลวันสำคัญ
     const eventsData = [
         { date: "2026-01-01", title: "🇹🇭 วันขึ้นปีใหม่" },
         { date: "2026-03-03", title: "🌙 วันมาฆบูชา" },
@@ -298,10 +289,13 @@
     const FIXED_TODAY = new Date(2026, 4, 15);   // 15 พฤษภาคม 2026
     const START_DAY_PREV_MONTH = 24;
     const END_DAY_CURRENT_MONTH = 23;
+
     let currentDisplayYear = 2026;
-    let currentDisplayMonth = 4;      // พฤษภาคม (0-index)
+    let currentDisplayMonth = 4;      // 4 = พฤษภาคม (0-index)
 
     const THAI_MONTHS_FULL = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    // วันย่อ 7 วันตามลำดับ (เริ่มอาทิตย์)
+    const WEEKDAY_ABBRS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 
     function toBuddhistYear(date) {
         return date.getFullYear() + 543;
@@ -319,100 +313,115 @@
         return eventMap.get(key) || null;
     }
 
-    // สร้างปฏิทิน โดย header วันจะเรียงตามวันเริ่มต้น (startDate) พอดี ไม่มีการเลื่อนหลุด
-    function renderCalendar(year, month) {
+    // หาช่วงวันที่: start = 24 ของเดือนก่อนหน้า, end = 23 ของเดือนปัจจุบัน
+    function getDateRange(year, month) {
         let prevYear = year;
         let prevMonth = month - 1;
         if (prevMonth < 0) {
             prevMonth = 11;
             prevYear = year - 1;
         }
-        const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
-        
         const startDate = new Date(prevYear, prevMonth, START_DAY_PREV_MONTH);
         const endDate = new Date(year, month, END_DAY_CURRENT_MONTH);
-        
-        let color1EndDate, color2StartDate;
-        if (daysInPrevMonth === 31) {
-            color1EndDate = new Date(year, month, 7);
-            color2StartDate = new Date(year, month, 8);
-        } else {
-            color1EndDate = new Date(year, month, 6);
-            color2StartDate = new Date(year, month, 7);
+        return { startDate, endDate, prevYear, prevMonth };
+    }
+
+    // สร้าง header โดยให้ช่องแรกตรงกับวันของ startDate
+    function buildHeader(startDate) {
+        const startWeekday = startDate.getDay(); // 0=อาทิตย์..6=เสาร์
+        const header = [];
+        for (let i = 0; i < 7; i++) {
+            const idx = (startWeekday + i) % 7;
+            header.push(WEEKDAY_ABBRS[idx]);
         }
+        return header;
+    }
+
+    function renderCalendar(year, month) {
+        const { startDate, endDate, prevYear, prevMonth } = getDateRange(year, month);
         
-        const dateList = [];
+        // สร้างรายการวันที่ทั้งหมดในช่วง startDate - endDate
+        const allDates = [];
         let cursor = new Date(startDate);
         while (cursor <= endDate) {
-            dateList.push(new Date(cursor));
+            allDates.push(new Date(cursor));
             cursor.setDate(cursor.getDate() + 1);
         }
-        
-        const prevMonthDates = dateList.filter(d => d.getMonth() === prevMonth && d.getFullYear() === prevYear);
-        const currentMonthDates = dateList.filter(d => d.getMonth() === month && d.getFullYear() === year);
-        
-        // ***** หัวตาราง: ใช้ startDate.getDay() เริ่มต้นให้ตรงกับคอลัมน์แรกพอดี *****
-        const startWeekday = startDate.getDay();    // 0=อาทิตย์..6=เสาร์
-        const dayNamesAbbr = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
-        const headerCols = [];
-        for (let i = 0; i < 7; i++) {
-            headerCols.push(dayNamesAbbr[(startWeekday + i) % 7]);
-        }
-        const thead = document.getElementById('tableHead');
-        thead.innerHTML = `<tr>${headerCols.map(col => `<th>${col}</th>`).join('')}</tr>`;
-        
-        function getColorClass(dateObj) {
-            if (dateObj <= color1EndDate) return 'color-range-blue';
-            if (dateObj >= color2StartDate) return 'color-range-orange';
+
+        // กำหนดสี: สีฟ้า = 24 เดือนก่อนหน้า ถึง 7 ของเดือนปัจจุบัน, สีส้ม = 8 ถึง 23 ของเดือนปัจจุบัน
+        const blueEnd = new Date(year, month, 7);
+        const orangeStart = new Date(year, month, 8);
+        function getColorClass(d) {
+            if (d <= blueEnd) return 'color-range-blue';
+            if (d >= orangeStart) return 'color-range-orange';
             return '';
         }
-        function isTodayCell(dateObj) {
-            return dateObj.getFullYear() === FIXED_TODAY.getFullYear() &&
-                   dateObj.getMonth() === FIXED_TODAY.getMonth() &&
-                   dateObj.getDate() === FIXED_TODAY.getDate();
+
+        function isTodayCell(d) {
+            return d.getFullYear() === FIXED_TODAY.getFullYear() &&
+                   d.getMonth() === FIXED_TODAY.getMonth() &&
+                   d.getDate() === FIXED_TODAY.getDate();
         }
-        
-        function buildRowFromDates(datesArray) {
-            let cells = '';
-            for (let i = 0; i < 7; i++) {
-                if (i < datesArray.length) {
-                    const d = datesArray[i];
-                    const dYear = d.getFullYear();
-                    const dMonth = d.getMonth();
-                    const dDay = d.getDate();
-                    let colorCls = getColorClass(d);
-                    const todayCls = isTodayCell(d) ? 'today-cell' : '';
-                    const finalClass = `${colorCls} ${todayCls}`.trim();
-                    const starHtml = getEventTitle(dYear, dMonth, dDay) ? '<span class="event-star">★</span>' : '';
-                    cells += `<td class="${finalClass}" data-year="${dYear}" data-month="${dMonth}" data-day="${dDay}">${dDay}${starHtml}</td>`;
-                } else {
-                    cells += `<td class="empty-cell"></td>`;
-                }
-            }
-            return `<tr>${cells}</tr>`;
+
+        // สร้าง header ที่หมุนตาม startDate
+        const headerCells = buildHeader(startDate);
+        const thead = document.getElementById('tableHead');
+        thead.innerHTML = `<tr>${headerCells.map(h => `<th>${h}</th>`).join('')}</tr>`;
+
+        // จัดเรียงวันที่ในตาราง: ให้ startDate อยู่คอลัมน์แรกเสมอ
+        // ดังนั้นเรียงทีละ 7 วัน
+        const rows = [];
+        for (let i = 0; i < allDates.length; i += 7) {
+            const rowDates = allDates.slice(i, i+7);
+            rows.push(rowDates);
         }
-        
+
+        // แยกส่วนของเดือนก่อนหน้าและเดือนปัจจุบันเพื่อใส่ตัวคั่น
+        // ใช้ allDates ไปเรื่อยๆ แต่เราจะแทรกแถวคั่นระหว่างเดือนเมื่อเดือนเปลี่ยน
         let tbodyHtml = '';
-        // แถวเดือนก่อน
-        for (let i = 0; i < prevMonthDates.length; i += 7) {
-            tbodyHtml += buildRowFromDates(prevMonthDates.slice(i, i+7));
+        let currentRowIndex = 0;
+        let inPrevMonth = true;
+        let prevMonthRowCount = 0;
+        
+        // หาว่าแถวแรกมีวันที่ของเดือนก่อนหน้ากี่แถว
+        const firstMonth = allDates[0].getMonth();
+        let lastPrevMonthRow = -1;
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const isPrevMonthRow = row.some(d => d.getMonth() === prevMonth && d.getFullYear() === prevYear);
+            if (isPrevMonthRow) {
+                prevMonthRowCount++;
+                lastPrevMonthRow = i;
+            } else {
+                break;
+            }
         }
-        // คั่นเดือน (ไม่มีดอกไม้ ลดความยาว)
+        
+        // สร้างแถวเดือนก่อนหน้า
+        for (let i = 0; i < prevMonthRowCount; i++) {
+            const row = rows[i];
+            tbodyHtml += buildRowHtml(row, getColorClass, isTodayCell);
+        }
+        
+        // แทรกตัวคั่นเดือน
         const currentYearBE = toBuddhistYear(new Date(year, month, 1));
         tbodyHtml += `<tr class="month-separator-row"><td colspan="7"><span>📆 ${THAI_MONTHS_FULL[month]} ${currentYearBE}</span></td></tr>`;
+        
         // แถวเดือนปัจจุบัน
-        for (let i = 0; i < currentMonthDates.length; i += 7) {
-            tbodyHtml += buildRowFromDates(currentMonthDates.slice(i, i+7));
+        for (let i = prevMonthRowCount; i < rows.length; i++) {
+            const row = rows[i];
+            tbodyHtml += buildRowHtml(row, getColorClass, isTodayCell);
         }
         
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = tbodyHtml;
         
-        // อัปเดตข้อมูล header + legend
+        // อัปเดต header ข้อมูลและ legend
         const prevMonthName = THAI_MONTHS_FULL[prevMonth];
         const prevYearBE = toBuddhistYear(new Date(prevYear, prevMonth, 1));
         const curMonthName = THAI_MONTHS_FULL[month];
         const curYearBE = toBuddhistYear(new Date(year, month, 1));
+        const daysInPrevMonth = new Date(prevYear, prevMonth+1, 0).getDate();
         let legendText = (daysInPrevMonth === 31) 
             ? `🔵 สีฟ้า (24 ${prevMonthName} ${prevYearBE} – 7 ${curMonthName}) &nbsp; 🟠 สีส้ม (8 ${curMonthName} – ${END_DAY_CURRENT_MONTH} ${curMonthName} ${curYearBE})`
             : `🔵 สีฟ้า (24 ${prevMonthName} ${prevYearBE} – 6 ${curMonthName}) &nbsp; 🟠 สีส้ม (7 ${curMonthName} – ${END_DAY_CURRENT_MONTH} ${curMonthName} ${curYearBE})`;
@@ -428,8 +437,28 @@
         document.getElementById('todayNoteFooter').innerHTML = `🔴 วันปัจจุบัน : ${todayDateStr} (พื้นสีส้มตามช่วง) — ตัวหนาสีแดง + ขีดเส้นใต้`;
         
         document.getElementById('eventDetailText').innerHTML = 'คลิกที่วันใดก็ได้เพื่อแสดงข้อมูล';
-        
         attachClickHandler();
+    }
+    
+    function buildRowHtml(dateRow, getColorClass, isTodayCell) {
+        let rowHtml = '<tr>';
+        for (let i = 0; i < 7; i++) {
+            const d = dateRow[i];
+            if (!d) {
+                rowHtml += `<td class="empty-cell"></td>`;
+            } else {
+                const dYear = d.getFullYear();
+                const dMonth = d.getMonth();
+                const dDay = d.getDate();
+                let colorCls = getColorClass(d);
+                const todayCls = isTodayCell(d) ? 'today-cell' : '';
+                const finalClass = `${colorCls} ${todayCls}`.trim();
+                const starHtml = getEventTitle(dYear, dMonth, dDay) ? '<span class="event-star">★</span>' : '';
+                rowHtml += `<td class="${finalClass}" data-year="${dYear}" data-month="${dMonth}" data-day="${dDay}">${dDay}${starHtml}</td>`;
+            }
+        }
+        rowHtml += '</tr>';
+        return rowHtml;
     }
     
     function attachClickHandler() {
@@ -480,7 +509,7 @@
     document.getElementById('prevMonthBtn').addEventListener('click', () => shiftMonth(-1));
     document.getElementById('nextMonthBtn').addEventListener('click', () => shiftMonth(1));
     
-    // เริ่มต้นที่ พฤษภาคม 2026
+    // เริ่มต้นแสดง พฤษภาคม 2026
     renderCalendar(2026, 4);
 </script>
 </body>
