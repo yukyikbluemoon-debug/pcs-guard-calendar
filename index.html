@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ปฏิทินค่าแรง รปภ. บ. pcs</title>
+    <title>ปฏิทินค่าแรง รปภ. บ.PCS</title>
     <style>
         * {
             box-sizing: border-box;
@@ -19,24 +19,38 @@
             margin: 0;
             padding: 20px;
         }
-        .calendar-container {
+
+        /* การ์ดหลักใช้ flex row ให้ปุ่มอยู่ซ้ายขวาตาราง */
+        .calendar-card {
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
+            padding: 1.5rem 1rem 1.2rem 1rem;
             display: flex;
+            flex-direction: row;
             align-items: center;
             justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            max-width: 1300px;
+            gap: 12px;
             width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
         }
+
+        /* ส่วนเนื้อหาปฏิทิน (header + table + footer) */
+        .calendar-content {
+            flex: 1;
+            min-width: 0;  /* ป้องกัน overflow */
+        }
+
         .nav-arrow {
             background: white;
             border: none;
-            font-size: 3rem;
-            width: 70px;
-            height: 70px;
+            font-size: 2.8rem;
+            width: 64px;
+            height: 64px;
             border-radius: 60px;
             cursor: pointer;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.1);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.1);
             transition: all 0.2s;
             display: flex;
             align-items: center;
@@ -44,6 +58,7 @@
             color: #2c5a74;
             font-weight: bold;
             background-color: #fef9e6;
+            flex-shrink: 0;
         }
         .nav-arrow:hover {
             background-color: #ffedd5;
@@ -53,53 +68,43 @@
         .nav-arrow:active {
             transform: scale(0.96);
         }
-        .calendar-card {
-            flex: 1;
-            min-width: 300px;
-            background: white;
-            border-radius: 32px;
-            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
-            padding: 1.5rem 1.2rem 1.2rem 1.2rem;
-        }
-        .calendar-header-area {
-            text-align: center;
-            margin-bottom: 1rem;
-        }
+
         .company-title {
-            font-size: 1.9rem;
+            font-size: 1.8rem;
             font-weight: 800;
             color: #b45309;
             background: #fff0df;
             display: inline-block;
-            padding: 0.2rem 1.8rem;
+            padding: 0.2rem 1.6rem;
             border-radius: 60px;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             margin-bottom: 10px;
+            text-align: center;
         }
         .month-year-title {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 700;
             color: #1e3a4b;
             background: #eef2fc;
             display: inline-block;
-            padding: 0.2rem 1.5rem;
+            padding: 0.2rem 1.2rem;
             border-radius: 48px;
         }
         .date-range-info {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             background: #fef3e8;
-            margin-top: 8px;
+            margin-top: 6px;
             display: inline-block;
-            padding: 5px 18px;
+            padding: 4px 14px;
             border-radius: 30px;
             color: #b45309;
         }
         .legend-dynamic {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             margin-top: 6px;
             background: #f8fafc;
             display: inline-block;
-            padding: 4px 16px;
+            padding: 3px 12px;
             border-radius: 28px;
             color: #1f5e7e;
         }
@@ -111,11 +116,11 @@
             margin-top: 12px;
         }
         .calendar-table th {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 700;
             color: #1f3a4b;
             background-color: #eef3fc;
-            padding: 12px 6px;
+            padding: 10px 4px;
             border: 1px solid #cfe0ec;
             text-align: center;
         }
@@ -124,9 +129,9 @@
             border: 1px solid #dee8f0;
             text-align: center;
             vertical-align: middle;
-            padding: 14px 4px;
+            padding: 12px 2px;
             font-weight: 600;
-            font-size: 1.35rem;
+            font-size: 1.25rem;
             cursor: pointer;
             transition: background 0.1s;
         }
@@ -136,7 +141,6 @@
             color: #b9cfdf;
             cursor: default;
         }
-        /* สีพื้น ช่วงฟ้า/ส้ม */
         .color-range-blue {
             background-color: #2c6eec !important;
             color: white;
@@ -145,14 +149,13 @@
             background-color: #f55c0a !important;
             color: white;
         }
-        /* วันปัจจุบัน : ตัวหนาสีแดงเข้ม พื้นคงเดิม */
         .today-cell {
             color: #b91c1c !important;
             font-weight: 900 !important;
-            font-size: 1.55rem;
+            font-size: 1.4rem;
             text-decoration: underline;
             text-decoration-thickness: 3px;
-            text-underline-offset: 6px;
+            text-underline-offset: 5px;
             text-decoration-color: #b91c1c;
         }
         .color-range-blue.today-cell,
@@ -160,24 +163,22 @@
             color: #e61919 !important;
             text-shadow: 0 0 2px rgba(255,255,200,0.6);
         }
-        /* ดาวประจำวัน event */
         .event-star {
             position: absolute;
             top: 2px;
-            right: 5px;
-            font-size: 0.8rem;
+            right: 4px;
+            font-size: 0.7rem;
             color: #FFD966;
             text-shadow: 0 0 2px #b97f0e;
             font-weight: bold;
             pointer-events: none;
         }
-        /* แถวคั่นเดือน */
         .month-separator-row td {
             background-color: #faebd7;
             text-align: center;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 700;
-            padding: 10px 8px;
+            padding: 8px;
             border: 1px solid #f5c491;
             border-top: 2px solid #f5a623;
             border-bottom: 2px solid #f5a623;
@@ -185,58 +186,63 @@
         }
         .month-separator-row td span {
             background: #fff2e2;
-            padding: 4px 24px;
+            padding: 2px 20px;
             border-radius: 36px;
-            font-size: 1.05rem;
+            font-size: 0.95rem;
         }
         .event-detail-panel {
-            margin-top: 20px;
+            margin-top: 18px;
             background: #fffaf2;
-            border-radius: 28px;
-            padding: 14px 20px;
+            border-radius: 24px;
+            padding: 10px 16px;
             text-align: center;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 500;
             color: #3b2a1f;
             border: 1px solid #ffe0b5;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
-            min-height: 85px;
+            min-height: 75px;
         }
         .event-detail-label {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             color: #b76e2e;
             letter-spacing: 1px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
         .event-detail-text {
-            font-size: 1.2rem;
+            font-size: 1rem;
             font-weight: 600;
             color: #b45309;
         }
         footer {
-            margin-top: 18px;
+            margin-top: 16px;
             text-align: center;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             border-top: 1px solid #e2eef5;
-            padding-top: 12px;
+            padding-top: 10px;
             color: #3c6e8f;
         }
         .version-badge {
             background: #eef2f5;
             font-family: monospace;
             display: inline-block;
-            padding: 2px 12px;
+            padding: 2px 10px;
             border-radius: 20px;
-            font-size: 0.7rem;
-            margin-top: 6px;
+            font-size: 0.65rem;
+            margin-top: 4px;
         }
-        @media (max-width: 780px) {
-            .nav-arrow { width: 50px; height: 50px; font-size: 2rem; }
-            .calendar-table td { font-size: 1rem; padding: 10px 2px; }
-            .today-cell { font-size: 1.2rem; }
-            .company-title { font-size: 1.3rem; }
-            .month-year-title { font-size: 1.2rem; }
+
+        @media (max-width: 680px) {
+            .calendar-card { gap: 6px; padding: 1rem 0.5rem; }
+            .nav-arrow { width: 48px; height: 48px; font-size: 2rem; }
+            .calendar-table td { font-size: 1rem; padding: 8px 2px; }
+            .today-cell { font-size: 1.1rem; }
+            .company-title { font-size: 1.2rem; padding: 0.1rem 1rem; }
+            .month-year-title { font-size: 1.1rem; }
             .event-star { font-size: 0.6rem; top: 1px; right: 2px; }
+        }
+        @media (max-width: 550px) {
+            .calendar-table th { font-size: 0.7rem; padding: 6px 2px; }
+            .calendar-table td { font-size: 0.9rem; }
         }
         td.today-cell {
             background-color: inherit !important;
@@ -247,33 +253,31 @@
     </style>
 </head>
 <body>
-<div class="calendar-container">
+<div class="calendar-card">
     <button class="nav-arrow" id="prevMonthBtn" aria-label="เดือนก่อนหน้า">◀</button>
-    <div class="calendar-card" id="calendarRoot">
+    <div class="calendar-content">
         <div style="text-align: center;">
-            <div class="company-title">💰 ค่าแรง รปภ. บ. pcs</div>
+            <div class="company-title">💰 ค่าแรง รปภ. บ.PCS</div>
             <div id="dynamicHeader"></div>
         </div>
         <table class="calendar-table" id="calendarTable">
             <thead id="tableHead"></thead>
             <tbody id="tableBody"></tbody>
         </table>
-        <!-- แผงแสดงรายละเอียดวัน -->
         <div class="event-detail-panel" id="eventDetailPanel">
             <div class="event-detail-label">📌 รายละเอียดวันที่เลือก</div>
             <div class="event-detail-text" id="eventDetailText">คลิกที่วันใดก็ได้เพื่อแสดงข้อมูล</div>
         </div>
         <footer>
             <span id="todayNoteFooter"></span><br>
-            <span class="version-badge">🎉 รองรับวันสำคัญ + ดาวทอง • แสดงรายละเอียดใต้ปฏิทิน • แปลงเป็น พ.ศ. อัตโนมัติ</span>
+            <span class="version-badge">✨ ดาวทองวันสำคัญ • คลิกแสดงรายละเอียด • เปลี่ยนเดือนด้วยลูกศรข้างตาราง</span>
         </footer>
     </div>
     <button class="nav-arrow" id="nextMonthBtn" aria-label="เดือนถัดไป">▶</button>
 </div>
 
 <script>
-    // ---------------------- ข้อมูลวันสำคัญ (พ.ศ. 2569 = ค.ศ. 2026) ----------------------
-    // แปลง พ.ศ. → ค.ศ. = พ.ศ. - 543
+    // ---------------------- วันสำคัญ (ค.ศ.) ----------------------
     const eventsData = [
         { date: "2026-01-01", title: "🇹🇭 วันขึ้นปีใหม่" },
         { date: "2026-03-03", title: "🌙 วันมาฆบูชา" },
@@ -289,54 +293,46 @@
         { date: "2026-12-05", title: "💛 วันพ่อแห่งชาติ" },
         { date: "2026-12-31", title: "🎆 วันสิ้นปี" }
     ];
-    
-    // สร้าง Map สำหรับค้นหา event อย่างรวดเร็ว key: "YYYY-MM-DD"
     const eventMap = new Map();
-    eventsData.forEach(ev => {
-        eventMap.set(ev.date, ev.title);
-    });
-    
-    // ฟังก์ชันแปลงปี ค.ศ. เป็น พ.ศ. สำหรับแสดงผล
-    function toBuddhistYear(date) {
-        return date.getFullYear() + 543;
-    }
-    
-    // ฟังก์ชัน format วันที่แบบ "d MonthName พ.ศ." สำหรับแสดงใน panel
-    function formatThaiDate(date) {
-        const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-        const day = date.getDate();
-        const month = thaiMonths[date.getMonth()];
-        const yearBE = date.getFullYear() + 543;
-        return `${day} ${month} ${yearBE}`;
-    }
-    
-    // ---------------------- กำหนดค่าคงที่ ----------------------
+    eventsData.forEach(ev => eventMap.set(ev.date, ev.title));
+
     const FIXED_TODAY = new Date(2026, 4, 15);   // 15 พฤษภาคม 2026
     const START_DAY_PREV_MONTH = 24;
     const END_DAY_CURRENT_MONTH = 23;
-    
     let currentDisplayYear = 2026;
-    let currentDisplayMonth = 4;      // 4 = พฤษภาคม
-    
+    let currentDisplayMonth = 4;      // พฤษภาคม (0-index)
+
     const THAI_MONTHS_FULL = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-    
-    // ฟังก์ชันหลัก render ปฏิทิน
+
+    function toBuddhistYear(date) {
+        return date.getFullYear() + 543;
+    }
+
+    function formatThaiDate(year, month, day) {
+        const thaiMonthsShort = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        const monthShort = thaiMonthsShort[month];
+        const yearBE = year + 543;
+        return `${day} ${monthShort} ${yearBE}`;
+    }
+
+    function getEventTitle(year, month, day) {
+        const key = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        return eventMap.get(key) || null;
+    }
+
+    // สร้างปฏิทิน
     function renderCalendar(year, month) {
-        // year, month (ค.ศ. month 0-index)
-        const currentTargetDate = new Date(year, month, 1);
-        
-        let prevMonthYear = year;
-        let prevMonthIndex = month - 1;
-        if (prevMonthIndex < 0) {
-            prevMonthIndex = 11;
-            prevMonthYear = year - 1;
+        let prevYear = year;
+        let prevMonth = month - 1;
+        if (prevMonth < 0) {
+            prevMonth = 11;
+            prevYear = year - 1;
         }
-        const daysInPrevMonth = new Date(prevMonthYear, prevMonthIndex + 1, 0).getDate();
+        const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
         
-        const startDate = new Date(prevMonthYear, prevMonthIndex, START_DAY_PREV_MONTH);
+        const startDate = new Date(prevYear, prevMonth, START_DAY_PREV_MONTH);
         const endDate = new Date(year, month, END_DAY_CURRENT_MONTH);
         
-        // กำหนดช่วงสีตามจำนวนวันในเดือนก่อน
         let color1EndDate, color2StartDate;
         if (daysInPrevMonth === 31) {
             color1EndDate = new Date(year, month, 7);
@@ -346,7 +342,6 @@
             color2StartDate = new Date(year, month, 7);
         }
         
-        // สร้างรายการวันที่ทั้งหมด
         const dateList = [];
         let cursor = new Date(startDate);
         while (cursor <= endDate) {
@@ -354,54 +349,42 @@
             cursor.setDate(cursor.getDate() + 1);
         }
         
-        const prevMonthDates = dateList.filter(d => d.getMonth() === prevMonthIndex && d.getFullYear() === prevMonthYear);
+        const prevMonthDates = dateList.filter(d => d.getMonth() === prevMonth && d.getFullYear() === prevYear);
         const currentMonthDates = dateList.filter(d => d.getMonth() === month && d.getFullYear() === year);
         
-        // Dynamic header columns
+        // หัวตารางแบบย่อ
         const startWeekday = startDate.getDay();
-        const dayNamesShort = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
-        const headerColumns = [];
-        for (let i = 0; i < 7; i++) {
-            headerColumns.push(dayNamesShort[(startWeekday + i) % 7]);
-        }
+        const dayNamesAbbr = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+        const headerCols = [];
+        for (let i = 0; i < 7; i++) headerCols.push(dayNamesAbbr[(startWeekday + i) % 7]);
         const thead = document.getElementById('tableHead');
-        let headerHtml = '<tr>';
-        headerColumns.forEach(col => { headerHtml += `<th>${col}</th>`; });
-        headerHtml += '</tr>';
-        thead.innerHTML = headerHtml;
+        thead.innerHTML = `<td>${headerCols.map(col => `<th>${col}</th>`).join('')}</tr>`;
         
-        // Helper: สีพื้นหลังตามช่วง
         function getColorClass(dateObj) {
             if (dateObj <= color1EndDate) return 'color-range-blue';
-            else if (dateObj >= color2StartDate) return 'color-range-orange';
+            if (dateObj >= color2StartDate) return 'color-range-orange';
             return '';
         }
-        
         function isTodayCell(dateObj) {
             return dateObj.getFullYear() === FIXED_TODAY.getFullYear() &&
                    dateObj.getMonth() === FIXED_TODAY.getMonth() &&
                    dateObj.getDate() === FIXED_TODAY.getDate();
         }
         
-        // ตรวจสอบว่าวันที่ตรงกับ event หรือไม่ (คืนข้อความ หรือ null)
-        function getEventTitle(dateObj) {
-            const key = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
-            return eventMap.get(key) || null;
-        }
-        
-        // สร้างแถวจากวันที่ (อาจมีดาว)
         function buildRowFromDates(datesArray) {
             let cells = '';
-            for (let col = 0; col < 7; col++) {
-                if (col < datesArray.length) {
-                    const d = datesArray[col];
-                    const dateNum = d.getDate();
+            for (let i = 0; i < 7; i++) {
+                if (i < datesArray.length) {
+                    const d = datesArray[i];
+                    const dYear = d.getFullYear();
+                    const dMonth = d.getMonth();
+                    const dDay = d.getDate();
                     let colorCls = getColorClass(d);
                     const todayCls = isTodayCell(d) ? 'today-cell' : '';
-                    let finalClass = colorCls + (todayCls ? ' ' + todayCls : '');
-                    const eventTitle = getEventTitle(d);
-                    const starIcon = eventTitle ? '<span class="event-star">★</span>' : '';
-                    cells += `<td class="${finalClass}" data-date="${d.toISOString().slice(0,10)}">${dateNum}${starIcon}</td>`;
+                    const finalClass = `${colorCls} ${todayCls}`.trim();
+                    const starHtml = getEventTitle(dYear, dMonth, dDay) ? '<span class="event-star">★</span>' : '';
+                    const isoDate = `${dYear}-${String(dMonth+1).padStart(2,'0')}-${String(dDay).padStart(2,'0')}`;
+                    cells += `<td class="${finalClass}" data-year="${dYear}" data-month="${dMonth}" data-day="${dDay}" data-date="${isoDate}">${dDay}${starHtml}</td>`;
                 } else {
                     cells += `<td class="empty-cell"></td>`;
                 }
@@ -410,143 +393,91 @@
         }
         
         let tbodyHtml = '';
-        // แถวเดือนก่อนหน้า
         for (let i = 0; i < prevMonthDates.length; i += 7) {
-            const chunk = prevMonthDates.slice(i, i+7);
-            tbodyHtml += buildRowFromDates(chunk);
+            tbodyHtml += buildRowFromDates(prevMonthDates.slice(i, i+7));
         }
-        // แถวคั่นเดือน (แสดงชื่อเดือนปัจจุบัน + พ.ศ.)
-        const currentMonthNameTH = THAI_MONTHS_FULL[month];
         const currentYearBE = toBuddhistYear(new Date(year, month, 1));
-        tbodyHtml += `<tr class="month-separator-row"><td colspan="7">
-                        <span>🌸 ${currentMonthNameTH} ${currentYearBE} 🌸</span>
-                        </td></tr>`;
-        // แถวเดือนปัจจุบัน
+        tbodyHtml += `<tr class="month-separator-row"><td colspan="7"><span>🌸 ${THAI_MONTHS_FULL[month]} ${currentYearBE} 🌸</span></td></tr>`;
         for (let i = 0; i < currentMonthDates.length; i += 7) {
-            const chunk = currentMonthDates.slice(i, i+7);
-            tbodyHtml += buildRowFromDates(chunk);
+            tbodyHtml += buildRowFromDates(currentMonthDates.slice(i, i+7));
         }
         
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = tbodyHtml;
         
-        // ---------- อัปเดตหัวข้อและ Legend (แสดง พ.ศ.) ----------
-        const prevMonthName = THAI_MONTHS_FULL[prevMonthIndex];
-        const prevYearBE = toBuddhistYear(new Date(prevMonthYear, prevMonthIndex, 1));
-        const currentMonthForHeader = THAI_MONTHS_FULL[month];
-        const currentYearBEforHeader = toBuddhistYear(new Date(year, month, 1));
+        // อัปเดต header & legend
+        const prevMonthName = THAI_MONTHS_FULL[prevMonth];
+        const prevYearBE = toBuddhistYear(new Date(prevYear, prevMonth, 1));
+        const curMonthName = THAI_MONTHS_FULL[month];
+        const curYearBE = toBuddhistYear(new Date(year, month, 1));
+        let legendText = (daysInPrevMonth === 31) 
+            ? `🔵 สีฟ้า (24 ${prevMonthName} ${prevYearBE} – 7 ${curMonthName}) &nbsp; 🟠 สีส้ม (8 ${curMonthName} – ${END_DAY_CURRENT_MONTH} ${curMonthName} ${curYearBE})`
+            : `🔵 สีฟ้า (24 ${prevMonthName} ${prevYearBE} – 6 ${curMonthName}) &nbsp; 🟠 สีส้ม (7 ${curMonthName} – ${END_DAY_CURRENT_MONTH} ${curMonthName} ${curYearBE})`;
         
-        let legendText = '';
-        if (daysInPrevMonth === 31) {
-            legendText = `🔵 สีฟ้า (24 ${prevMonthName} ${prevYearBE} – 7 ${currentMonthForHeader}) &nbsp; 🟠 สีส้ม (8 ${currentMonthForHeader} – ${END_DAY_CURRENT_MONTH} ${currentMonthForHeader} ${currentYearBEforHeader})`;
-        } else {
-            legendText = `🔵 สีฟ้า (24 ${prevMonthName} ${prevYearBE} – 6 ${currentMonthForHeader}) &nbsp; 🟠 สีส้ม (7 ${currentMonthForHeader} – ${END_DAY_CURRENT_MONTH} ${currentMonthForHeader} ${currentYearBEforHeader})`;
-        }
-        
-        const headerContainer = document.getElementById('dynamicHeader');
-        headerContainer.innerHTML = `
-            <div class="month-year-title">📅 ${currentMonthForHeader} ${currentYearBEforHeader}</div>
-            <div class="date-range-info">
-                📌 เริ่ม 24 ${prevMonthName} ${prevYearBE} • สิ้นสุด ${END_DAY_CURRENT_MONTH} ${currentMonthForHeader} ${currentYearBEforHeader}
-            </div>
+        document.getElementById('dynamicHeader').innerHTML = `
+            <div class="month-year-title">📅 ${curMonthName} ${curYearBE}</div>
+            <div class="date-range-info">📌 เริ่ม 24 ${prevMonthName} ${prevYearBE} • สิ้นสุด ${END_DAY_CURRENT_MONTH} ${curMonthName} ${curYearBE}</div>
             <div class="legend-dynamic">${legendText}</div>
         `;
         
-        // footer note วันปัจจุบัน
         const todayYearBE = toBuddhistYear(FIXED_TODAY);
         const todayDateStr = `${FIXED_TODAY.getDate()} ${THAI_MONTHS_FULL[FIXED_TODAY.getMonth()]} ${todayYearBE}`;
-        const todayNote = document.getElementById('todayNoteFooter');
-        todayNote.innerHTML = `🔴 วันปัจจุบัน : ${todayDateStr} (พื้นช่วงสีส้ม) — ตัวหนาสีแดง + ขีดเส้นใต้`;
+        document.getElementById('todayNoteFooter').innerHTML = `🔴 วันปัจจุบัน : ${todayDateStr} (พื้นสีส้มตามช่วง) — ตัวหนาสีแดง + ขีดเส้นใต้`;
         
-        // รีเซ็ต panel รายละเอียด (เมื่อเปลี่ยนเดือนจะไม่แสดงข้อมูลเก่า)
-        const detailDiv = document.getElementById('eventDetailText');
-        detailDiv.innerHTML = 'คลิกที่วันใดก็ได้เพื่อแสดงข้อมูล';
+        document.getElementById('eventDetailText').innerHTML = 'คลิกที่วันใดก็ได้เพื่อแสดงข้อมูล';
         
-        // หลังจากเพิ่ม td ลง DOM เรียบร้อย ให้ attach event listener สำหรับการคลิก (delegation ผ่าน tbody)
-        attachCellClickHandler();
+        attachClickHandler();
     }
     
-    // ฟังก์ชันจัดการคลิกที่วัน (แสดงรายละเอียด)
-    function attachCellClickHandler() {
+    function attachClickHandler() {
         const tbody = document.getElementById('tableBody');
-        // ใช้ event delegation เพื่อไม่ต้องล้าง event เก่า
-        tbody.removeEventListener('click', cellClickHandler);
-        tbody.addEventListener('click', cellClickHandler);
+        tbody.removeEventListener('click', tbodyClickHandler);
+        tbody.addEventListener('click', tbodyClickHandler);
     }
     
-    function cellClickHandler(e) {
+    function tbodyClickHandler(e) {
         let target = e.target;
         while (target && target.tagName !== 'TD') {
             target = target.parentElement;
             if (!target) return;
         }
         if (!target) return;
-        if (target.classList.contains('empty-cell')) return;
-        if (target.classList.contains('month-separator-row')) return; // ไม่ต้อง
+        if (target.classList.contains('empty-cell') || target.classList.contains('month-separator-row')) return;
         
-        const dateAttr = target.getAttribute('data-date');
-        if (!dateAttr) return;
+        const year = parseInt(target.getAttribute('data-year'));
+        const month = parseInt(target.getAttribute('data-month'));
+        const day = parseInt(target.getAttribute('data-day'));
+        if (isNaN(year) || isNaN(month) || isNaN(day)) return;
         
-        const clickedDate = new Date(dateAttr);
-        if (isNaN(clickedDate)) return;
-        
-        // หา event
-        const eventTitle = eventMap.get(dateAttr);
-        const formattedDate = formatThaiDate(clickedDate);
-        const detailTextElement = document.getElementById('eventDetailText');
+        const eventTitle = getEventTitle(year, month, day);
+        const dateStr = formatThaiDate(year, month, day);
+        const detailDiv = document.getElementById('eventDetailText');
         if (eventTitle) {
-            detailTextElement.innerHTML = `📅 ${formattedDate} : ${eventTitle} <span style="font-size:0.9rem;">✨</span>`;
+            detailDiv.innerHTML = `📅 ${dateStr} : ${eventTitle} <span style="font-size:0.85rem;">✨</span>`;
         } else {
-            detailTextElement.innerHTML = `📅 ${formattedDate} : ไม่มีกิจกรรมสำคัญ`;
+            detailDiv.innerHTML = `📅 ${dateStr} : ไม่มีกิจกรรมสำคัญ`;
         }
     }
     
-    // เปลี่ยนเดือน
     function shiftMonth(delta) {
         let newMonth = currentDisplayMonth + delta;
         let newYear = currentDisplayYear;
         if (newMonth < 0) {
             newMonth = 11;
-            newYear -= 1;
+            newYear--;
         } else if (newMonth > 11) {
             newMonth = 0;
-            newYear += 1;
+            newYear++;
         }
         currentDisplayMonth = newMonth;
         currentDisplayYear = newYear;
         renderCalendar(currentDisplayYear, currentDisplayMonth);
     }
     
-    // Event listeners
     document.getElementById('prevMonthBtn').addEventListener('click', () => shiftMonth(-1));
     document.getElementById('nextMonthBtn').addEventListener('click', () => shiftMonth(1));
     
-    // เริ่มต้นแสดงเดือนพฤษภาคม 2026 (ค.ศ.)
-    currentDisplayYear = 2026;
-    currentDisplayMonth = 4;   // พฤษภาคม
-    renderCalendar(currentDisplayYear, currentDisplayMonth);
-    
-    // ปรับแต่ง style เพิ่มเติมสำหรับดาว
-    const extraStyle = document.createElement('style');
-    extraStyle.textContent = `
-        .color-range-blue, .color-range-blue.today-cell { background-color: #2c6eec !important; }
-        .color-range-orange, .color-range-orange.today-cell { background-color: #f55c0a !important; }
-        td.today-cell { background-color: inherit !important; }
-        .calendar-table td { position: relative; }
-        .event-star {
-            position: absolute;
-            top: 3px;
-            right: 5px;
-            font-size: 0.8rem;
-            color: #FFD966;
-            text-shadow: 0 0 2px #b97f0e;
-            font-weight: bold;
-        }
-        @media (max-width: 550px) {
-            .event-star { font-size: 0.6rem; top: 2px; right: 3px; }
-        }
-    `;
-    document.head.appendChild(extraStyle);
+    renderCalendar(2026, 4);
 </script>
 </body>
 </html>
